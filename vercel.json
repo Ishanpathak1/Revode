@@ -2,11 +2,7 @@
     "version": 2,
     "builds": [
       {
-        "src": "api/**/*.js",
-        "use": "@vercel/node"
-      },
-      {
-        "src": "src/**/*",
+        "src": "package.json",
         "use": "@vercel/static-build",
         "config": {
           "distDir": "build"
@@ -15,16 +11,9 @@
     ],
     "routes": [
       {
-        "src": "/api/(.*)",
-        "dest": "/api/$1"
-      },
-      {
         "src": "/(.*)",
-        "dest": "/src/$1"
+        "dest": "/index.html"
       }
-    ],
-    "env": {
-      "REACT_APP_API_BASE_URL": "/api"
-    }
+    ]
   }
   
