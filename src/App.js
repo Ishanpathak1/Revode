@@ -5,14 +5,15 @@ import SignUp from "./components/Auth/Signup";
 import Login from "./components/Auth/Login";
 import Dashboard from "./components/Dashboard";
 import PrivateRoute from "./components/Auth/PrivateRoute";
+import StreakPage from "./components/streakPage";
 
 const App = () => {
     return (
         <div>
-            <Navbar />
             <Routes>
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/streakpage" element={<StreakPage />} />
                 <Route
                     path="/dashboard"
                     element={

@@ -1,0 +1,195 @@
+/* StreakPage.css */
+.streak-container {
+    min-height: 100vh;
+    background-color: #f9fafb;
+    padding: 2rem 1rem;
+}
+
+.streak-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+/* Profile Header */
+.profile-header {
+    background-color: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.profile-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.profile-avatar {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    border: 4px solid #f3f4f6;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    object-fit: cover;
+}
+
+.profile-info h1 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.5rem;
+}
+
+.profile-info p {
+    font-size: 1.125rem;
+    color: #4b5563;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.stat-card {
+    background-color: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.stat-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #4b5563;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #059669;
+}
+
+.stat-value span {
+    font-size: 1.5rem;
+}
+
+/* Heatmap Section */
+.heatmap-section {
+    background-color: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.heatmap-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 1.5rem;
+}
+
+.heatmap-container {
+    overflow-x: auto;
+    padding-bottom: 1rem;
+}
+
+/* Error Message */
+.error-message {
+    margin-top: 1.5rem;
+    background-color: #fef2f2;
+    color: #991b1b;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+/* Welcome Message */
+.welcome-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.welcome-content {
+    text-align: center;
+}
+
+.welcome-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.5rem;
+}
+
+.welcome-text {
+    color: #4b5563;
+}
+
+/* Heatmap Custom Styles */
+.react-calendar-heatmap {
+    width: 100%;
+}
+
+.react-calendar-heatmap text {
+    font-size: 10px;
+    fill: #aaa;
+}
+
+.react-calendar-heatmap rect {
+    rx: 2;
+    stroke: #fff;
+    stroke-width: 2;
+    transition: all 0.2s ease;
+}
+
+.react-calendar-heatmap rect:hover {
+    stroke: #000;
+    stroke-width: 1;
+}
+
+.react-calendar-heatmap .color-empty {
+    fill: #f0f0f0;
+}
+
+.react-calendar-heatmap .color-scale-1 {
+    fill: #9be9a8;
+}
+
+.react-calendar-heatmap .color-scale-2 {
+    fill: #40c463;
+}
+
+.react-calendar-heatmap .color-scale-3 {
+    fill: #30a14e;
+}
+
+.react-calendar-heatmap .color-scale-4 {
+    fill: #216e39;
+}
+
+/* Tooltip Styles */
+.tooltip {
+    background-color: #1f2937;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    z-index: 50;
+}

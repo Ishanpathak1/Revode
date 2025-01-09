@@ -1,35 +1,39 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { auth } from "../firebaseConfig";
+import React, { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import StreakPage from "./streakPage";
+import "./Navbar.css";
 
-const Navbar = () => {
-    const handleLogout = async () => {
-        try {
-            await auth.signOut();
-            console.log("User logged out");
-        } catch (error) {
-            console.error("Error logging out:", error.message);
-        }
+const Navbar = ({ user, onLogout }) => {
+    const [showDropdown, setShowDropdown] = useState(false);
+    const location = useLocation();
+
+    const isActive = (path) => {
+        return location.pathname === path ? "nav-link active" : "nav-link";
+    };
+
+    const handleClickOutside = () => {
+        setShowDropdown(false);
     };
 
     return (
-        <nav>
-            <ul style={{ listStyle: "none", display: "flex", gap: "1rem" }}>
-                <li>
-                    <Link to="/signup">Sign Up</Link>
-                </li>
-                <li>
-                    <Link to="/login">Login</Link>
-                </li>
-                <li>
-                    <Link to="/dashboard">Dashboard</Link>
-                </li>
-                {auth.currentUser && (
-                    <li>
-                        <button onClick={handleLogout}>Logout</button>
-                    </li>
-                )}
-            </ul>
+        <nav className="navbar">
+            <div className="navbar-container">
+                <Link to="/dashboard" className="navbar-logo">
+                    <span className="logo-text">Revode</span>
+                </Link>
+
+                <div className="navbar-links">
+                    <Link to="/dashboard" className={isActive("/dashboard")}>
+                        Dashboard
+                    </Link>
+                    <Link to="/streakPage" className={isActive("/streak")}>
+                        Profile
+                    </Link>
+                    <button onClick={onLogout} className="nav-link logout-btn">
+                        Logout
+                    </button>
+                </div>
+            </div>
         </nav>
     );
 };

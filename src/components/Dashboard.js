@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { auth, db } from "../firebaseConfig";
-import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
-import OpenAI from "openai";
+import { generateMCQs } from '../api/chatgpt';
+import { collection, addDoc, getDocs, query, where, updateDoc, doc } from "firebase/firestore";
+import "./Dashboard.css";
+import Navbar from "./Navbar";
+
 
 // Initialize OpenAI
-const openai = new OpenAI({
-    apiKey: process.env.REACT_APP_OPENAI_API_KEY,
-    dangerouslyAllowBrowser: true 
-});
 
 const Dashboard = () => {
     const [user, setUser] = useState(null);
@@ -175,20 +174,127 @@ const Dashboard = () => {
 };
     
 
-    const handleQuizSubmit = () => {
-        if (!currentQuiz) return;
+const handleQuizSubmit = async () => {
+    if (!currentQuiz) return;
 
-        let correctAnswers = 0;
-        currentQuiz.forEach((question, index) => {
-            if (quizResponses[index] === question.correctIndex) {
-                correctAnswers++;
-            }
-        });
+    try {
+        // Calculate score and check if quiz passed
+        const { score, passed } = calculateQuizScore(currentQuiz, quizResponses);
+        
+        // Get today's date in YYYY-MM-DD format
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Update user statistics
+        await updateUserStats(score, passed, today);
+        
+        // Update activity heatmap data if quiz passed
+        if (passed) {
+            await updateActivityData(today);
+        }
 
-        const score = (correctAnswers / currentQuiz.length) * 100;
+        // Update UI state
         setCurrentScore(score);
         setQuizSubmitted(true);
+        setError(passed ? null : "Quiz score below 70%. Streak not updated. Try again!");
+
+    } catch (error) {
+        console.error("Error in quiz submission:", error);
+        setError(`Error submitting quiz: ${error.message}`);
+    }
+};
+
+// Helper function to calculate quiz score
+const calculateQuizScore = (quiz, responses) => {
+    const correctAnswers = quiz.reduce((total, question, index) => {
+        return total + (responses[index] === question.correctIndex ? 1 : 0);
+    }, 0);
+
+    const score = (correctAnswers / quiz.length) * 100;
+    return {
+        score,
+        passed: score >= 70
     };
+};
+
+// Helper function to update user statistics
+const updateUserStats = async (score, passed, today) => {
+    const userStatsRef = collection(db, "userStats");
+    const q = query(userStatsRef, where("userId", "==", auth.currentUser.uid));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+        // Create new user stats if none exist
+        const newUserStats = {
+            userId: auth.currentUser.uid,
+            email: auth.currentUser.email,
+            streak: passed ? 1 : 0,
+            lastSolved: passed ? today : null,
+            solvedProblem: passed ? 1 : 0,
+            totalScore: score,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        await addDoc(collection(db, "userStats"), newUserStats);
+        return;
+    }
+
+    // Update existing user stats
+    if (passed) {
+        const userStatsDoc = querySnapshot.docs[0];
+        const userStats = userStatsDoc.data();
+        const newStreak = calculateNewStreak(userStats.lastSolved, today, userStats.streak);
+
+        await updateDoc(doc(db, "userStats", userStatsDoc.id), {
+            streak: newStreak,
+            lastSolved: today,
+            solvedProblem: (userStats.solvedProblem || 0) + 1,
+            totalScore: (userStats.totalScore || 0) + score,
+            updatedAt: new Date().toISOString()
+        });
+    }
+};
+
+// Helper function to calculate new streak
+const calculateNewStreak = (lastSolved, today, currentStreak) => {
+    if (!lastSolved) return 1;
+
+    const lastSolvedDate = new Date(lastSolved);
+    const todayDate = new Date(today);
+    const diffDays = Math.floor((todayDate - lastSolvedDate) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return currentStreak;        // Same day
+    if (diffDays === 1) return currentStreak + 1;    // Consecutive day
+    return 1;                                        // Streak broken
+};
+
+// Helper function to update activity heatmap data
+const updateActivityData = async (today) => {
+    const activityRef = collection(db, "activities");
+    const activityQuery = query(
+        activityRef,
+        where("userId", "==", auth.currentUser.uid),
+        where("date", "==", today)
+    );
+    
+    const activitySnapshot = await getDocs(activityQuery);
+
+    if (activitySnapshot.empty) {
+        // Create new activity entry
+        await addDoc(collection(db, "activities"), {
+            userId: auth.currentUser.uid,
+            date: today,
+            count: 1,
+            createdAt: new Date().toISOString()
+        });
+    } else {
+        // Update existing activity count
+        const activityDoc = activitySnapshot.docs[0];
+        await updateDoc(doc(db, "activities", activityDoc.id), {
+            count: activityDoc.data().count + 1,
+            updatedAt: new Date().toISOString()
+        });
+    }
+};
 
     const handleLogout = async () => {
         try {
@@ -199,61 +305,31 @@ const Dashboard = () => {
     };
 
     return (
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "20px" }}>
+        <div className="dashboard-container">
+            <Navbar user={user} onLogout={handleLogout} />
             {/* Header Section */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-                <h1 style={{ fontSize: "24px", fontWeight: "bold" }}>LeetCode Practice Dashboard</h1>
-                {user && (
-                    <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-                        <img
-                            src={user.photoURL || "/default-avatar.png"}
-                            alt="User Profile"
-                            style={{ borderRadius: "50%", width: "40px", height: "40px" }}
-                        />
-                        <div>
-                            <p style={{ fontWeight: "500" }}>{user.displayName || "N/A"}</p>
-                            <p style={{ color: "#666" }}>{user.email}</p>
-                        </div>
-                        <button 
-                            onClick={handleLogout}
-                            style={{
-                                padding: "8px 16px",
-                                backgroundColor: "#f44336",
-                                color: "white",
-                                border: "none",
-                                borderRadius: "4px",
-                                cursor: "pointer"
-                            }}
-                        >
-                            Logout
-                        </button>
-                    </div>
-                )}
-            </div>
+            <header className="dashboard-header">
+               
+            </header>
 
             {/* Error Message */}
             {error && (
-                <div style={{ 
-                    backgroundColor: "#ffebee", 
-                    color: "#c62828", 
-                    padding: "10px", 
-                    borderRadius: "4px",
-                    marginBottom: "20px" 
-                }}>
+                <div className="error-message">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
                     {error}
                 </div>
             )}
 
             {user ? (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                <div className="dashboard-grid">
                     {/* Add Problem Form */}
-                    <div style={{ 
-                        border: "1px solid #ddd", 
-                        borderRadius: "8px", 
-                        padding: "20px"
-                    }}>
-                        <h2 style={{ fontSize: "20px", marginBottom: "20px" }}>Add New Problem</h2>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+                    <div className="dashboard-card">
+                        <h2 className="card-title">Add New Problem</h2>
+                        <div className="form-container">
                             <input
                                 type="text"
                                 placeholder="Problem Title"
@@ -262,11 +338,7 @@ const Dashboard = () => {
                                     ...newProblem,
                                     title: e.target.value
                                 })}
-                                style={{
-                                    padding: "8px",
-                                    border: "1px solid #ddd",
-                                    borderRadius: "4px"
-                                }}
+                                className="form-input"
                             />
                             <textarea
                                 placeholder="Problem Description"
@@ -275,12 +347,7 @@ const Dashboard = () => {
                                     ...newProblem,
                                     description: e.target.value
                                 })}
-                                style={{
-                                    padding: "8px",
-                                    border: "1px solid #ddd",
-                                    borderRadius: "4px",
-                                    minHeight: "100px"
-                                }}
+                                className="form-input form-textarea"
                             />
                             <input
                                 type="url"
@@ -290,11 +357,7 @@ const Dashboard = () => {
                                     ...newProblem,
                                     link: e.target.value
                                 })}
-                                style={{
-                                    padding: "8px",
-                                    border: "1px solid #ddd",
-                                    borderRadius: "4px"
-                                }}
+                                className="form-input"
                             />
                             <select
                                 value={newProblem.difficulty}
@@ -302,11 +365,7 @@ const Dashboard = () => {
                                     ...newProblem,
                                     difficulty: e.target.value
                                 })}
-                                style={{
-                                    padding: "8px",
-                                    border: "1px solid #ddd",
-                                    borderRadius: "4px"
-                                }}
+                                className="form-select"
                             >
                                 <option>Easy</option>
                                 <option>Medium</option>
@@ -315,15 +374,7 @@ const Dashboard = () => {
                             <button
                                 onClick={handleAddProblem}
                                 disabled={loading}
-                                style={{
-                                    padding: "10px",
-                                    backgroundColor: "#2196f3",
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "4px",
-                                    cursor: loading ? "not-allowed" : "pointer",
-                                    opacity: loading ? 0.7 : 1
-                                }}
+                                className="primary-btn"
                             >
                                 {loading ? "Adding..." : "Add Problem"}
                             </button>
@@ -331,50 +382,25 @@ const Dashboard = () => {
                     </div>
 
                     {/* Problems List */}
-                    <div style={{ 
-                        border: "1px solid #ddd", 
-                        borderRadius: "8px", 
-                        padding: "20px"
-                    }}>
-                        <h2 style={{ fontSize: "20px", marginBottom: "20px" }}>Your Problems</h2>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+                    <div className="dashboard-card">
+                        <h2 className="card-title">Your Problems</h2>
+                        <div className="problem-list">
                             {problems.map((problem) => (
-                                <div 
-                                    key={problem.id}
-                                    style={{
-                                        border: "1px solid #ddd",
-                                        borderRadius: "4px",
-                                        padding: "15px"
-                                    }}
-                                >
-                                    <h3 style={{ marginBottom: "8px" }}>{problem.title}</h3>
-                                    <p style={{ color: "#666", marginBottom: "12px" }}>
+                                <div key={problem.id} className="problem-card">
+                                    <h3 className="problem-title">{problem.title}</h3>
+                                    <p className="problem-difficulty">
                                         Difficulty: {problem.difficulty}
                                     </p>
-                                    <div style={{ display: "flex", gap: "10px" }}>
+                                    <div className="problem-actions">
                                         <button
                                             onClick={() => window.open(problem.link, '_blank')}
-                                            style={{
-                                                padding: "8px 16px",
-                                                backgroundColor: "#fff",
-                                                color: "#2196f3",
-                                                border: "1px solid #2196f3",
-                                                borderRadius: "4px",
-                                                cursor: "pointer"
-                                            }}
+                                            className="secondary-btn"
                                         >
                                             View Problem
                                         </button>
                                         <button
                                             onClick={() => startQuiz(problem.id)}
-                                            style={{
-                                                padding: "8px 16px",
-                                                backgroundColor: "#2196f3",
-                                                color: "white",
-                                                border: "none",
-                                                borderRadius: "4px",
-                                                cursor: "pointer"
-                                            }}
+                                            className="primary-btn"
                                         >
                                             Start Quiz
                                         </button>
@@ -386,33 +412,27 @@ const Dashboard = () => {
 
                     {/* Quiz Section */}
                     {currentQuiz && (
-                        <div style={{ 
-                            gridColumn: "span 2",
-                            border: "1px solid #ddd",
-                            borderRadius: "8px",
-                            padding: "20px"
-                        }}>
-                            <h2 style={{ fontSize: "20px", marginBottom: "20px" }}>Quiz</h2>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                        <div className="quiz-section">
+                            <h2 className="card-title">Quiz</h2>
+                            <div className="quiz-container">
                                 {currentQuiz.map((question, index) => (
-                                    <div key={index}>
-                                        <p style={{ marginBottom: "10px", fontWeight: "500" }}>
+                                    <div key={index} className="quiz-question">
+                                        <p className="question-text">
                                             {index + 1}. {question.question}
                                         </p>
-                                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                        <div className="options-list">
                                             {question.options.map((option, optIndex) => (
                                                 <label 
                                                     key={optIndex} 
-                                                    style={{ 
-                                                        display: "flex", 
-                                                        gap: "8px",
-                                                        padding: "8px",
-                                                        backgroundColor: quizSubmitted ? 
-                                                            (optIndex === question.correctIndex ? "#e8f5e9" : 
-                                                             quizResponses[index] === optIndex ? "#ffebee" : "transparent")
-                                                            : "transparent",
-                                                        borderRadius: "4px"
-                                                    }}
+                                                    className={`option-label ${
+                                                        quizSubmitted
+                                                            ? optIndex === question.correctIndex
+                                                                ? "option-correct"
+                                                                : quizResponses[index] === optIndex
+                                                                ? "option-incorrect"
+                                                                : ""
+                                                            : ""
+                                                    }`}
                                                 >
                                                     <input
                                                         type="radio"
@@ -434,29 +454,16 @@ const Dashboard = () => {
                                 {!quizSubmitted ? (
                                     <button
                                         onClick={handleQuizSubmit}
-                                        style={{
-                                            padding: "8px 16px",
-                                            backgroundColor: "#4caf50",
-                                            color: "white",
-                                            border: "none",
-                                            borderRadius: "4px",
-                                            cursor: "pointer",
-                                            marginTop: "20px"
-                                        }}
+                                        className="primary-btn"
                                     >
                                         Submit Quiz
                                     </button>
                                 ) : (
-                                    <div style={{ marginTop: "20px" }}>
-                                        <p style={{ 
-                                            fontSize: "18px", 
-                                            fontWeight: "500", 
-                                            marginBottom: "10px",
-                                            color: currentScore >= 70 ? "#4caf50" : "#f44336"
-                                        }}>
+                                    <div className="quiz-result">
+                                        <p className={`score-text ${currentScore >= 70 ? 'score-pass' : 'score-fail'}`}>
                                             Your Score: {currentScore.toFixed(1)}%
                                         </p>
-                                        <div style={{ display: "flex", gap: "10px" }}>
+                                        <div className="quiz-actions">
                                             <button
                                                 onClick={() => {
                                                     setCurrentQuiz(null);
@@ -464,14 +471,7 @@ const Dashboard = () => {
                                                     setQuizSubmitted(false);
                                                     setCurrentScore(null);
                                                 }}
-                                                style={{
-                                                    padding: "8px 16px",
-                                                    backgroundColor: "#2196f3",
-                                                    color: "white",
-                                                    border: "none",
-                                                    borderRadius: "4px",
-                                                    cursor: "pointer"
-                                                }}
+                                                className="primary-btn close-btn"
                                             >
                                                 Close Quiz
                                             </button>
@@ -481,14 +481,7 @@ const Dashboard = () => {
                                                     setQuizSubmitted(false);
                                                     setCurrentScore(null);
                                                 }}
-                                                style={{
-                                                    padding: "8px 16px",
-                                                    backgroundColor: "#ff9800",
-                                                    color: "white",
-                                                    border: "none",
-                                                    borderRadius: "4px",
-                                                    cursor: "pointer"
-                                                }}
+                                                className="primary-btn retry-btn"
                                             >
                                                 Retry Quiz
                                             </button>
@@ -500,7 +493,9 @@ const Dashboard = () => {
                     )}
                 </div>
             ) : (
-                <p>Please log in to access the dashboard.</p>
+                <div className="dashboard-card">
+                    <p className="text-center">Please log in to access the dashboard.</p>
+                </div>
             )}
         </div>
     );

@@ -1,0 +1,56 @@
+.terms-text {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-top: 1rem;
+}
+
+.terms-link {
+    color: #5b21b6;
+    text-decoration: none;
+}
+
+.terms-link:hover {
+    text-decoration: underline;
+}
+
+.password-requirements {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-top: 0.5rem;
+}
+
+.requirement-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+}
+
+.requirement-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #374151;
+    font-size: 0.85rem;
+}
+
+.requirement-item.valid {
+    color: #059669;
+}
+
+.already-account {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.already-account a {
+    color: #5b21b6;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.already-account a:hover {
+    text-decoration: underline;
+}
