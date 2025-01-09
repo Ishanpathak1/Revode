@@ -36,7 +36,6 @@ dist/
 
 # Gatsby files
 .cache/
-public/
 
 # Gridsome
 .cache/
