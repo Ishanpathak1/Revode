@@ -16,11 +16,11 @@ const Login = () => {
         setError("");
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            console.log("User logged in:", userCredential.user);
+            
             navigate("/dashboard");
         } catch (error) {
             setError(error.message);
-            console.error("Error logging in:", error.message);
+            
         }
     };
 
@@ -28,11 +28,11 @@ const Login = () => {
         setError("");
         try {
             const result = await signInWithPopup(auth, provider);
-            console.log("User signed in with Google:", result.user);
+            
             navigate("/dashboard");
         } catch (error) {
             setError(error.message);
-            console.error("Error with Google login:", error.message);
+            
         }
     };
 

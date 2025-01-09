@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { auth, db } from "../firebaseConfig";
-import { generateMCQs } from '../api/chatgpt';
+
 import { collection, addDoc, getDocs, query, where, updateDoc, doc } from "firebase/firestore";
 import "./Dashboard.css";
 import Navbar from "./Navbar";
@@ -52,9 +52,13 @@ const Dashboard = () => {
 
     const generateMCQs = async (problemDescription) => {
         try {
-            console.log('Sending problem description:', problemDescription); // Debug log
-    
-            const response = await fetch('http://localhost:3000/api/generate-mcqs', {
+            const apiUrl = process.env.REACT_APP_API_BASE_URL;
+
+        if (!apiUrl) {
+            throw new Error("API base URL is not defined. Check environment variables.");
+        }
+
+        const response = await fetch(`${apiUrl}/generate-mcqs`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -62,7 +66,7 @@ const Dashboard = () => {
                 body: JSON.stringify({ description: problemDescription }),
             });
     
-            console.log('Response status:', response.status); // Debug log
+            
     
             if (!response.ok) {
                 const errorData = await response.json();
@@ -71,7 +75,7 @@ const Dashboard = () => {
             }
     
             const data = await response.json();
-            console.log('Received MCQs:', data); // Debug log
+            
             
             if (!data.mcqs || !Array.isArray(data.mcqs)) {
                 throw new Error('Invalid MCQ data received');
@@ -79,7 +83,7 @@ const Dashboard = () => {
     
             return data.mcqs;
         } catch (error) {
-            console.error('Error in generateMCQs:', error); // Debug log
+            
             throw error;
         }
     };
@@ -102,11 +106,11 @@ const Dashboard = () => {
             
             // Save problem first and get the reference
             const problemRef = await addDoc(collection(db, "problems"), problemData);
-            console.log("Problem added with ID:", problemRef.id);
+            
             
             // Generate MCQs
             const mcqs = await generateMCQs(newProblem.description);
-            console.log("Generated MCQs:", mcqs);
+            
             
             // Store MCQs with the correct problem ID
             const quizData = {
@@ -130,7 +134,7 @@ const Dashboard = () => {
             await fetchProblems();
             setError(null);
         } catch (error) {
-            console.error("Error in handleAddProblem:", error);
+            
             setError("Error adding problem: " + error.message);
         } finally {
             setLoading(false);
@@ -139,7 +143,7 @@ const Dashboard = () => {
 
     const startQuiz = async (problemId) => {
     try {
-        console.log("Starting quiz for problem:", problemId);
+        
         
         const quizzesRef = collection(db, "quizzes");
         const q = query(quizzesRef, 
@@ -148,11 +152,11 @@ const Dashboard = () => {
         );
         
         const querySnapshot = await getDocs(q);
-        console.log("Quiz query result:", querySnapshot.size);
+        
         
         if (!querySnapshot.empty) {
             const quizData = querySnapshot.docs[0].data();
-            console.log("Found quiz data:", quizData);
+            
             
             if (quizData.mcqs && Array.isArray(quizData.mcqs)) {
                 setCurrentQuiz(quizData.mcqs);

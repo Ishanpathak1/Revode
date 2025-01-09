@@ -8,7 +8,7 @@ const app = express();
 
 // Configure CORS for your frontend
 app.use(cors({
-    origin: 'http://localhost:3001',
+    origin: 'http://localhost:3000',
     methods: ['GET', 'POST'],
     credentials: true
 }));
@@ -172,7 +172,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-const PORT = 3000;
+const PORT = 8080;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT} at ${new Date().toISOString()}`);
 });

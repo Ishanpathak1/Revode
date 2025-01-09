@@ -1,13 +1,7 @@
-
-import OpenAI from "openai";
-
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
-
 export const generateMCQs = async (problemDescription) => {
     try {
-        const response = await fetch('http://localhost:3000/api/generate-mcqs', {
+        // Use a relative URL for the backend API
+        const response = await fetch('${process.env.NEXT_PUBLIC_API_BASE_URL}/generate-mcqs', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
