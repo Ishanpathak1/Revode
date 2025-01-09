@@ -15,11 +15,11 @@
     "react-tooltip": "^5.28.0"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "concurrently \"npm start\" \"node server.js\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "dev": "concurrently \"npm run start\" \"npm run server\""
+    "dev": "concurrently \"npm start\" \"node server.js\""
   },
   "browserslist": {
     "production": [
