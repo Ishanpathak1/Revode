@@ -6,26 +6,30 @@
         "use": "@vercel/node"
       },
       {
-        "src": "build/**",
-        "use": "@vercel/static"
+        "src": "package.json",
+        "use": "@vercel/static-build",
+        "config": {
+          "distDir": "build"
+        }
       }
     ],
     "routes": [
       {
         "src": "/api/(.*)",
-        "dest": "/server.js"
+        "dest": "server.js"
       },
       {
-        "src": "/health",
-        "dest": "/server.js"
+        "src": "/static/(.*)",
+        "headers": { "cache-control": "public, max-age=31536000, immutable" },
+        "dest": "/build/static/$1"
       },
       {
-        "src": "/test-openai",
-        "dest": "/server.js"
+        "src": "/[^.]+",
+        "dest": "index.html"
       },
       {
-        "src": "/((?!api).*)",
-        "dest": "/build/index.html"
+        "src": "/(.*)",
+        "dest": "/build/$1"
       }
     ]
   }
