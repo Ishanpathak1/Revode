@@ -172,10 +172,18 @@ app.use((err, req, res, next) => {
     });
 });
 
-const PORT = 8080;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT} at ${new Date().toISOString()}`);
-});
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, 'build')));
+    
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(__dirname, 'build', 'index.html'));
+    });
+  }
+  
+  const port = process.env.PORT || 8080;
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
