@@ -109,13 +109,6 @@ const SignUp = () => {
                                 </div>
                             </div>
 
-                            <div className="terms-text">
-                                By signing up, you agree to our{" "}
-                                <a href="#" className="terms-link">Terms of Service</a>{" "}
-                                and{" "}
-                                <a href="#" className="terms-link">Privacy Policy</a>
-                            </div>
-
                             <button type="submit" className="submit-button">
                                 Create Account
                             </button>
