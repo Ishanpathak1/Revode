@@ -1,4 +1,5 @@
 {
+  "homepage": "/login",
   "dependencies": {
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
