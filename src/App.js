@@ -7,12 +7,14 @@ import Dashboard from "./components/Dashboard";
 import PrivateRoute from "./components/Auth/PrivateRoute";
 import StreakPage from "./components/streakPage";
 import Home from "./Home";
+import RankingPage from "./components/Rankingpage";
 
 const App = () => {
     return (
         <div>
             <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/rank" element={<RankingPage />} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/streakpage" element={<StreakPage />} />

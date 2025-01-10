@@ -1,0 +1,178 @@
+.ranking-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.ranking-content {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+}
+
+.ranking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.ranking-header h1 {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.ranking-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.form-input {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    min-width: 200px;
+}
+
+.form-select {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    background-color: white;
+}
+
+.user-ranking-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid #e9ecef;
+}
+
+.user-ranking-card h2 {
+    font-size: 1.2rem;
+    color: #495057;
+    margin-bottom: 1rem;
+}
+
+.user-ranking-stats {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.rank-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.rank-percentile {
+    font-size: 1.1rem;
+    color: #6c757d;
+}
+
+.rankings-table-container {
+    overflow-x: auto;
+}
+
+.rankings-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.rankings-table th {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.rankings-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.current-user-row {
+    background-color: #e8f4f8;
+}
+
+.rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    font-weight: bold;
+}
+
+.loading-message {
+    text-align: center;
+    padding: 2rem;
+    color: #6c757d;
+}
+
+.error-message {
+    background-color: #fee;
+    color: #c00;
+    padding: 1rem;
+    border-radius: 4px;
+    margin: 1rem 0;
+}
+
+.welcome-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+}
+
+.welcome-content {
+    text-align: center;
+    padding: 2rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-title {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.welcome-text {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+    .ranking-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .ranking-controls {
+        flex-direction: column;
+    }
+
+    .form-input,
+    .form-select {
+        width: 100%;
+    }
+
+    .user-ranking-stats {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+}

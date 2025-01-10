@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import StreakPage from "./streakPage";
+import RankingPage from "./Rankingpage";
 import "./Navbar.css";
 
 const Navbar = ({ user, onLogout }) => {
@@ -28,6 +29,9 @@ const Navbar = ({ user, onLogout }) => {
                     </Link>
                     <Link to="/streakPage" className={isActive("/streak")}>
                         Profile
+                    </Link>
+                    <Link to="/rank" className={isActive("/rank")}>
+                        Rank
                     </Link>
                     <button onClick={onLogout} className="nav-link logout-btn">
                         Logout
