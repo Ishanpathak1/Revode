@@ -586,7 +586,7 @@ const Dashboard = () => {
                 </div>
             ) : (
                 <div className="dashboard-card">
-                    <h2 className="text-center text-2xl font-bold mb-6">Welcome to Problem Practice</h2>
+                    <h2 className="text-center text-2xl font-bold mb-6">Welcome to Revode</h2>
                     <p className="text-center mb-8">Please log in or sign up to access the dashboard.</p>
                     <div className="flex justify-center gap-4">
                         <button 
