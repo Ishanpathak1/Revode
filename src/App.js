@@ -6,11 +6,13 @@ import Login from "./components/Auth/Login";
 import Dashboard from "./components/Dashboard";
 import PrivateRoute from "./components/Auth/PrivateRoute";
 import StreakPage from "./components/streakPage";
+import Home from "./Home";
 
 const App = () => {
     return (
         <div>
             <Routes>
+                <Route path="/" element={<Home />} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/streakpage" element={<StreakPage />} />
