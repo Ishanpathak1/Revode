@@ -1,7 +1,7 @@
 export const generateMCQs = async (problemDescription) => {
     try {
         // Use a relative URL for the backend API
-        const response = await fetch('${process.env.NEXT_PUBLIC_API_BASE_URL}/generate-mcqs', {
+        const response = await fetch('${process.env.REACT_APP_API_BASE_URL}/generate-mcqs', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

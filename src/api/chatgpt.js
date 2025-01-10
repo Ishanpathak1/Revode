@@ -1,6 +1,6 @@
 const generateMCQs = async (problemDescription) => {
     try {
-        const response = await fetch('http://localhost:3000/api/generate-mcqs', {
+        const response = await fetch('REACT_APP_API_BASE_URL/generate-mcqs', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
