@@ -297,3 +297,46 @@
     justify-content: center;
     font-size: 0.875rem;
 }
+
+.quiz-section {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.back-btn {
+    padding: 0.5rem 1rem;
+}
+
+.quiz-container {
+    margin-top: 1rem;
+}
+
+.score-badge {
+    margin-left: 1rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.score-badge.pass {
+    background-color: #34D399;
+    color: #064E3B;
+}
+
+.score-badge.fail {
+    background-color: #F87171;
+    color: #7F1D1D;
+}

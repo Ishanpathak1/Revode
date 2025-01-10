@@ -29,13 +29,26 @@ const Dashboard = () => {
     const [quizResponses, setQuizResponses] = useState({});
     const [quizSubmitted, setQuizSubmitted] = useState(false);
     const [currentScore, setCurrentScore] = useState(null);
+    const [previousQuizData, setPreviousQuizData] = useState(null);
+    const [isQuizReview, setIsQuizReview] = useState(false);
 
-    // Filtered problems
-    const filteredProblems = problems.filter(problem => {
-        const matchesSearch = problem.title.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesDifficulty = !difficultyFilter || problem.difficulty === difficultyFilter;
-        return matchesSearch && matchesDifficulty;
-    });
+    const extractNumber = (title) => {
+        const match = title.match(/^(\d+)\./);
+        return match ? parseInt(match[1]) : Number.MAX_SAFE_INTEGER;
+    };
+    
+    // Filtered problems with numeric sorting
+    const filteredProblems = problems
+        .filter(problem => {
+            const matchesSearch = problem.title.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesDifficulty = !difficultyFilter || problem.difficulty === difficultyFilter;
+            return matchesSearch && matchesDifficulty;
+        })
+        .sort((a, b) => {
+            const numA = extractNumber(a.title);
+            const numB = extractNumber(b.title);
+            return numA - numB;
+        });
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -52,7 +65,6 @@ const Dashboard = () => {
     const fetchProblems = async () => {
         try {
             const problemsRef = collection(db, "problems");
-            // If admin, fetch all problems, else fetch based on filters
             const q = userCanAddProblems 
                 ? query(problemsRef)
                 : query(problemsRef, where("isPublic", "==", true));
@@ -73,10 +85,29 @@ const Dashboard = () => {
             const completedRef = collection(db, "completedQuizzes");
             const q = query(completedRef, where("userId", "==", auth.currentUser?.uid));
             const querySnapshot = await getDocs(q);
-            const completed = querySnapshot.docs.map(doc => doc.data().problemId);
+            const completed = querySnapshot.docs.map(doc => ({
+                problemId: doc.data().problemId,
+                score: doc.data().score,
+                responses: doc.data().responses || {},
+                completedAt: doc.data().completedAt
+            }));
             setCompletedQuizzes(completed);
         } catch (error) {
             console.error("Error fetching completed quizzes:", error);
+        }
+    };
+
+    const fetchQuizDetails = async (problemId) => {
+        try {
+            const completedQuiz = completedQuizzes.find(q => q.problemId === problemId);
+            if (completedQuiz) {
+                setPreviousQuizData(completedQuiz);
+                return completedQuiz;
+            }
+            return null;
+        } catch (error) {
+            console.error("Error fetching quiz details:", error);
+            return null;
         }
     };
 
@@ -84,10 +115,8 @@ const Dashboard = () => {
         if (!userCanAddProblems) return;
         
         try {
-            // Delete problem
             await deleteDoc(doc(db, "problems", problemId));
             
-            // Delete associated quiz
             const quizQuery = query(
                 collection(db, "quizzes"), 
                 where("problemId", "==", problemId)
@@ -97,7 +126,6 @@ const Dashboard = () => {
                 await deleteDoc(doc.ref);
             });
             
-            // Refresh problems list
             await fetchProblems();
             setError(null);
         } catch (error) {
@@ -105,92 +133,13 @@ const Dashboard = () => {
         }
     };
 
-    const generateMCQs = async (problemDescription) => {
-        try {
-            const apiUrl = process.env.REACT_APP_API_BASE_URL;
-            if (!apiUrl) {
-                throw new Error("API base URL is not defined");
-            }
-
-            const response = await fetch(`${apiUrl}/generate-mcqs`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ description: problemDescription }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to generate MCQs');
-            }
-
-            const data = await response.json();
-            if (!data.mcqs || !Array.isArray(data.mcqs)) {
-                throw new Error('Invalid MCQ data received');
-            }
-
-            return data.mcqs;
-        } catch (error) {
-            throw error;
-        }
-    };
-
-    const handleAddProblem = async () => {
-        if (!userCanAddProblems) {
-            setError("You don't have permission to add problems");
-            return;
-        }
-
-        try {
-            if (!newProblem.title || !newProblem.description || !newProblem.link) {
-                setError("Please fill in all fields");
-                return;
-            }
-
-            setLoading(true);
-            
-            const problemData = {
-                ...newProblem,
-                createdBy: auth.currentUser.uid,
-                isPublic: true,
-                createdAt: new Date().toISOString(),
-            };
-            
-            const problemRef = await addDoc(collection(db, "problems"), problemData);
-            const mcqs = await generateMCQs(newProblem.description);
-            
-            const quizData = {
-                problemId: problemRef.id,
-                createdBy: auth.currentUser.uid,
-                mcqs: mcqs,
-                createdAt: new Date().toISOString(),
-            };
-            
-            await addDoc(collection(db, "quizzes"), quizData);
-            
-            setNewProblem({
-                title: "",
-                description: "",
-                difficulty: "Easy",
-                link: "",
-            });
-            
-            await fetchProblems();
-            setError(null);
-        } catch (error) {
-            setError("Error adding problem: " + error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const startQuiz = async (problemId) => {
-        if (completedQuizzes.includes(problemId)) {
-            setError("You have already completed this quiz!");
-            return;
-        }
-
         try {
             setCurrentQuizProblemId(problemId);
+            
+            // Check if the quiz was previously completed
+            const completedQuiz = completedQuizzes.find(q => q.problemId === problemId);
+            setIsQuizReview(!!completedQuiz);
             
             const quizzesRef = collection(db, "quizzes");
             const q = query(quizzesRef, where("problemId", "==", problemId));
@@ -201,9 +150,18 @@ const Dashboard = () => {
                 
                 if (quizData.mcqs && Array.isArray(quizData.mcqs)) {
                     setCurrentQuiz(quizData.mcqs);
-                    setQuizResponses({});
-                    setQuizSubmitted(false);
-                    setCurrentScore(null);
+                    
+                    if (completedQuiz) {
+                        setPreviousQuizData(completedQuiz);
+                        setQuizResponses(completedQuiz.responses);
+                        setCurrentScore(completedQuiz.score);
+                        setQuizSubmitted(true);
+                    } else {
+                        setPreviousQuizData(null);
+                        setQuizResponses({});
+                        setQuizSubmitted(false);
+                        setCurrentScore(null);
+                    }
                 } else {
                     setError("Quiz data is not in the correct format");
                 }
@@ -218,39 +176,46 @@ const Dashboard = () => {
 
     const handleQuizSubmit = async () => {
         if (!currentQuiz || !currentQuizProblemId) return;
-        
-        if (completedQuizzes.includes(currentQuizProblemId)) {
-            setError("You have already completed this quiz!");
-            return;
-        }
 
         try {
             const { score, passed } = calculateQuizScore(currentQuiz, quizResponses);
             const today = new Date().toISOString().split('T')[0];
             
-            // Record quiz completion regardless of pass/fail
-            await addDoc(collection(db, "completedQuizzes"), {
+            const quizData = {
                 userId: auth.currentUser.uid,
                 problemId: currentQuizProblemId,
                 score: score,
                 passed: passed,
+                responses: quizResponses,
                 completedAt: new Date().toISOString()
-            });
+            };
+
+            // Record quiz completion
+            await addDoc(collection(db, "completedQuizzes"), quizData);
 
             if (passed) {
                 await updateUserStats(score, passed, today);
                 await updateActivityData(today);
-                // Add to completed quizzes list
-                setCompletedQuizzes([...completedQuizzes, currentQuizProblemId]);
+                setCompletedQuizzes([...completedQuizzes, quizData]);
             }
 
             setCurrentScore(score);
             setQuizSubmitted(true);
+            setPreviousQuizData(quizData);
             setError(passed ? null : "Quiz score below 70%. Try again!");
 
         } catch (error) {
             console.error("Error in quiz submission:", error);
             setError(`Error submitting quiz: ${error.message}`);
+        }
+    };
+
+    const handleQuizResponse = (questionIndex, optionIndex) => {
+        if (!isQuizReview) {
+            setQuizResponses({
+                ...quizResponses,
+                [questionIndex]: optionIndex
+            });
         }
     };
 
@@ -339,6 +304,16 @@ const Dashboard = () => {
         }
     };
 
+    const resetQuiz = () => {
+        setQuizResponses({});
+        setQuizSubmitted(false);
+        setCurrentScore(null);
+        setPreviousQuizData(null);
+        setCurrentQuizProblemId(null);
+        setCurrentQuiz(null);
+        setError(null);
+    };
+
     const handleLogout = async () => {
         try {
             await auth.signOut();
@@ -347,11 +322,88 @@ const Dashboard = () => {
         }
     };
 
+    const generateMCQs = async (problemDescription) => {
+        try {
+            const apiUrl = process.env.REACT_APP_API_BASE_URL;
+            if (!apiUrl) {
+                throw new Error("API base URL is not defined");
+            }
+
+            const response = await fetch(`${apiUrl}/generate-mcqs`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ description: problemDescription }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to generate MCQs');
+            }
+
+            const data = await response.json();
+            if (!data.mcqs || !Array.isArray(data.mcqs)) {
+                throw new Error('Invalid MCQ data received');
+            }
+
+            return data.mcqs;
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    const handleAddProblem = async () => {
+        if (!userCanAddProblems) {
+            setError("You don't have permission to add problems");
+            return;
+        }
+
+        try {
+            if (!newProblem.title || !newProblem.description || !newProblem.link) {
+                setError("Please fill in all fields");
+                return;
+            }
+
+            setLoading(true);
+            
+            const problemData = {
+                ...newProblem,
+                createdBy: auth.currentUser.uid,
+                isPublic: true,
+                createdAt: new Date().toISOString(),
+            };
+            
+            const problemRef = await addDoc(collection(db, "problems"), problemData);
+            const mcqs = await generateMCQs(newProblem.description);
+            
+            const quizData = {
+                problemId: problemRef.id,
+                createdBy: auth.currentUser.uid,
+                mcqs: mcqs,
+                createdAt: new Date().toISOString(),
+            };
+            
+            await addDoc(collection(db, "quizzes"), quizData);
+            
+            setNewProblem({
+                title: "",
+                description: "",
+                difficulty: "Easy",
+                link: "",
+            });
+            
+            await fetchProblems();
+            setError(null);
+        } catch (error) {
+            setError("Error adding problem: " + error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="dashboard-container">
             <Navbar user={user} onLogout={handleLogout} />
             
-            {/* Error Message */}
             {error && (
                 <div className="error-message">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -365,143 +417,24 @@ const Dashboard = () => {
     
             {user ? (
                 <div className="dashboard-grid">
-                    {/* Add Problem Form - Only visible to admin */}
-                    {userCanAddProblems && (
-                        <div className="dashboard-card">
-                            <h2 className="card-title">Add New Problem</h2>
-                            <div className="form-container">
-                                <input
-                                    type="text"
-                                    placeholder="Problem Title"
-                                    value={newProblem.title}
-                                    onChange={(e) => setNewProblem({
-                                        ...newProblem,
-                                        title: e.target.value
-                                    })}
-                                    className="form-input"
-                                />
-                                <textarea
-                                    placeholder="Problem Description"
-                                    value={newProblem.description}
-                                    onChange={(e) => setNewProblem({
-                                        ...newProblem,
-                                        description: e.target.value
-                                    })}
-                                    className="form-input form-textarea"
-                                />
-                                <input
-                                    type="url"
-                                    placeholder="LeetCode Link"
-                                    value={newProblem.link}
-                                    onChange={(e) => setNewProblem({
-                                        ...newProblem,
-                                        link: e.target.value
-                                    })}
-                                    className="form-input"
-                                />
-                                <select
-                                    value={newProblem.difficulty}
-                                    onChange={(e) => setNewProblem({
-                                        ...newProblem,
-                                        difficulty: e.target.value
-                                    })}
-                                    className="form-select"
-                                >
-                                    <option>Easy</option>
-                                    <option>Medium</option>
-                                    <option>Hard</option>
-                                </select>
+                    {currentQuiz ? (
+                        <div className="quiz-section">
+                            <div className="quiz-header">
+                                <h2 className="card-title">
+                                    {isQuizReview ? "Quiz Review" : "Quiz"}
+                                    {previousQuizData && (
+                                        <span className={`score-badge ${previousQuizData.score >= 70 ? 'pass' : 'fail'}`}>
+                                            Score: {previousQuizData.score.toFixed(1)}%
+                                        </span>
+                                    )}
+                                </h2>
                                 <button
-                                    onClick={handleAddProblem}
-                                    disabled={loading}
-                                    className="primary-btn"
+                                    onClick={resetQuiz}
+                                    className="secondary-btn back-btn"
                                 >
-                                    {loading ? "Adding..." : "Add Problem"}
+                                    Back to Problems
                                 </button>
                             </div>
-                        </div>
-                    )}
-    
-                    {/* Problems List with Search and Filter */}
-                    <div className="dashboard-card">
-                        <h2 className="card-title">
-                            {userCanAddProblems ? "Manage Problems" : "Available Problems"}
-                        </h2>
-                        
-                        {/* Search and Filter Section */}
-                        <div className="problem-filters">
-                            <input
-                                type="text"
-                                placeholder="Search problems..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="form-input"
-                            />
-                            <select
-                                value={difficultyFilter}
-                                onChange={(e) => setDifficultyFilter(e.target.value)}
-                                className="form-select"
-                            >
-                                <option value="">All Difficulties</option>
-                                <option value="Easy">Easy</option>
-                                <option value="Medium">Medium</option>
-                                <option value="Hard">Hard</option>
-                            </select>
-                        </div>
-    
-                        <div className="problem-list">
-                            {filteredProblems.map((problem) => (
-                                <div key={problem.id} className="problem-card">
-                                    <h3 className="problem-title">{problem.title}</h3>
-                                    <p className="problem-difficulty">
-                                        Difficulty: {problem.difficulty}
-                                    </p>
-                                    <div className="problem-actions">
-                                        <button
-                                            onClick={() => window.open(problem.link, '_blank')}
-                                            className="secondary-btn"
-                                        >
-                                            View Problem
-                                        </button>
-                                        
-                                        {userCanAddProblems ? (
-                                            // Admin actions
-                                            <div className="admin-actions">
-                                                <button
-                                                    onClick={() => handleEditProblem(problem.id)}
-                                                    className="secondary-btn"
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDeleteProblem(problem.id)}
-                                                    className="danger-btn"
-                                                >
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            // Student actions
-                                            <button
-                                                onClick={() => startQuiz(problem.id)}
-                                                className="primary-btn"
-                                                disabled={completedQuizzes.includes(problem.id)}
-                                            >
-                                                {completedQuizzes.includes(problem.id) 
-                                                    ? "Completed" 
-                                                    : "Start Quiz"}
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-    
-                    {/* Quiz Section */}
-                    {currentQuiz && (
-                        <div className="quiz-section">
-                            <h2 className="card-title">Quiz</h2>
                             <div className="quiz-container">
                                 {currentQuiz.map((question, index) => (
                                     <div key={index} className="quiz-question">
@@ -509,63 +442,71 @@ const Dashboard = () => {
                                             {index + 1}. {question.question}
                                         </p>
                                         <div className="options-list">
-                                            {question.options.map((option, optIndex) => (
-                                                <label 
-                                                    key={optIndex} 
-                                                    className={`option-label ${
-                                                        quizSubmitted
-                                                            ? optIndex === question.correctIndex
-                                                                ? "option-correct"
-                                                                : quizResponses[index] === optIndex
-                                                                ? "option-incorrect"
+                                            {question.options.map((option, optIndex) => {
+                                                const isCorrect = optIndex === question.correctIndex;
+                                                const isSelected = quizResponses[index] === optIndex;
+                                                const showResult = quizSubmitted || isQuizReview;
+
+                                                return (
+                                                    <label 
+                                                        key={optIndex} 
+                                                        className={`option-label ${
+                                                            showResult
+                                                                ? isCorrect
+                                                                    ? "option-correct"
+                                                                    : isSelected
+                                                                        ? "option-incorrect"
+                                                                        : ""
                                                                 : ""
-                                                            : ""
-                                                    }`}
-                                                >
-                                                    <input
-                                                        type="radio"
-                                                        name={`question-${index}`}
-                                                        value={optIndex}
-                                                        onChange={() => setQuizResponses({
-                                                            ...quizResponses,
-                                                            [index]: optIndex
-                                                        })}
-                                                        disabled={quizSubmitted || completedQuizzes.includes(currentQuizProblemId)}
-                                                        checked={quizResponses[index] === optIndex}
-                                                    />
-                                                    {option}
-                                                </label>
-                                            ))}
+                                                        }`}
+                                                    >
+                                                        <input
+                                                            type="radio"
+                                                            name={`question-${index}`}
+                                                            value={optIndex}
+                                                            onChange={() => handleQuizResponse(index, optIndex)}
+                                                            disabled={showResult}
+                                                            checked={isSelected}
+                                                        />
+                                                        {option}
+                                                        {showResult && isCorrect && (
+                                                            <span className="correct-answer-indicator">✓</span>
+                                                        )}
+                                                    </label>
+                                                );
+                                            })}
                                         </div>
+                                        {(quizSubmitted || isQuizReview) && (
+                                            <div className="answer-feedback">
+                                                <p className="correct-answer">
+                                                    Correct Answer: {question.options[question.correctIndex]}
+                                                </p>
+                                                {question.explanation && (
+                                                    <p className="explanation-text">
+                                                        {question.explanation}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
-                                {!quizSubmitted ? (
+                                
+                                {!isQuizReview && !quizSubmitted ? (
                                     <button
                                         onClick={handleQuizSubmit}
-                                        className="primary-btn"
-                                        disabled={completedQuizzes.includes(currentQuizProblemId)}
+                                        className="primary-btn submit-btn"
                                     >
                                         Submit Quiz
                                     </button>
                                 ) : (
                                     <div className="quiz-result">
-                                        <p className={`score-text ${currentScore >= 70 ? 'score-pass' : 'score-fail'}`}>
-                                            Your Score: {currentScore.toFixed(1)}%
-                                        </p>
+                                        {currentScore !== null && (
+                                            <p className={`score-text ${currentScore >= 70 ? 'score-pass' : 'score-fail'}`}>
+                                                Your Score: {currentScore.toFixed(1)}%
+                                            </p>
+                                        )}
                                         <div className="quiz-actions">
-                                            <button
-                                                onClick={() => {
-                                                    setCurrentQuiz(null);
-                                                    setQuizResponses({});
-                                                    setQuizSubmitted(false);
-                                                    setCurrentScore(null);
-                                                    setCurrentQuizProblemId(null);
-                                                }}
-                                                className="primary-btn close-btn"
-                                            >
-                                                Close Quiz
-                                            </button>
-                                            {!completedQuizzes.includes(currentQuizProblemId) && (
+                                            {!isQuizReview && currentScore < 70 && (
                                                 <button
                                                     onClick={() => {
                                                         setQuizResponses({});
@@ -582,6 +523,139 @@ const Dashboard = () => {
                                 )}
                             </div>
                         </div>
+                    ) : (
+                        <>
+                            {userCanAddProblems && (
+                                <div className="dashboard-card">
+                                    <h2 className="card-title">Add New Problem</h2>
+                                    <div className="form-container">
+                                        <input
+                                            type="text"
+                                            placeholder="Problem Title"
+                                            value={newProblem.title}
+                                            onChange={(e) => setNewProblem({
+                                                ...newProblem,
+                                                title: e.target.value
+                                            })}
+                                            className="form-input"
+                                        />
+                                        <textarea
+                                            placeholder="Problem Description"
+                                            value={newProblem.description}
+                                            onChange={(e) => setNewProblem({
+                                                ...newProblem,
+                                                description: e.target.value
+                                            })}
+                                            className="form-input form-textarea"
+                                        />
+                                        <input
+                                            type="url"
+                                            placeholder="LeetCode Link"
+                                            value={newProblem.link}
+                                            onChange={(e) => setNewProblem({
+                                                ...newProblem,
+                                                link: e.target.value
+                                            })}
+                                            className="form-input"
+                                        />
+                                        <select
+                                            value={newProblem.difficulty}
+                                            onChange={(e) => setNewProblem({
+                                                ...newProblem,
+                                                difficulty: e.target.value
+                                            })}
+                                            className="form-select"
+                                        >
+                                            <option>Easy</option>
+                                            <option>Medium</option>
+                                            <option>Hard</option>
+                                        </select>
+                                        <button
+                                            onClick={handleAddProblem}
+                                            disabled={loading}
+                                            className="primary-btn"
+                                        >
+                                            {loading ? "Adding..." : "Add Problem"}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+            
+                            <div className="dashboard-card">
+                                <h2 className="card-title">
+                                    {userCanAddProblems ? "Manage Problems" : "Available Problems"}
+                                </h2>
+                                
+                                <div className="problem-filters">
+                                    <input
+                                        type="text"
+                                        placeholder="Search problems..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="form-input"
+                                    />
+                                    <select
+                                        value={difficultyFilter}
+                                        onChange={(e) => setDifficultyFilter(e.target.value)}
+                                        className="form-select"
+                                    >
+                                        <option value="">All Difficulties</option>
+                                        <option value="Easy">Easy</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="Hard">Hard</option>
+                                    </select>
+                                </div>
+            
+                                <div className="problem-list">
+                                    {filteredProblems.map((problem) => (
+                                        <div key={problem.id} className="problem-card">
+                                            <h3 className="problem-title">{problem.title}</h3>
+                                            <p className="problem-difficulty">
+                                                Difficulty: {problem.difficulty}
+                                            </p>
+                                            <div className="problem-actions">
+                                                <button
+                                                    onClick={() => window.open(problem.link, '_blank')}
+                                                    className="secondary-btn"
+                                                >
+                                                    View Problem
+                                                </button>
+                                                
+                                                {userCanAddProblems ? (
+                                                    <div className="admin-actions">
+                                                        <button
+                                                            onClick={() => handleEditProblem(problem.id)}
+                                                            className="secondary-btn"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteProblem(problem.id)}
+                                                            className="danger-btn"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => startQuiz(problem.id)}
+                                                        className={`primary-btn ${
+                                                            completedQuizzes.find(q => q.problemId === problem.id)
+                                                                ? 'completed'
+                                                                : ''
+                                                        }`}
+                                                    >
+                                                        {completedQuizzes.find(q => q.problemId === problem.id)
+                                                            ? "Review Quiz"
+                                                            : "Start Quiz"}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </>
                     )}
                 </div>
             ) : (
