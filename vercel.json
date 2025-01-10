@@ -13,14 +13,19 @@
     "routes": [
       {
         "src": "/api/(.*)",
-        "dest": "server.js"
+        "dest": "/server.js"
       },
       {
-        "src": "/(.*)",
-        "dest": "build/$1"
+        "src": "/health",
+        "dest": "/server.js"
+      },
+      {
+        "src": "/test-openai",
+        "dest": "/server.js"
+      },
+      {
+        "src": "/((?!api).*)",
+        "dest": "/build/index.html"
       }
-    ],
-    "env": {
-      "NODE_VERSION": "18.x"
-    }
+    ]
   }
