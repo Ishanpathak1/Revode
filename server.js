@@ -2,13 +2,14 @@
 const express = require('express');
 const cors = require('cors');
 const OpenAI = require('openai');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
 
 // Configure CORS for your frontend
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: ['http://localhost:3000', 'https://revode.vercel.app'],
     methods: ['GET', 'POST'],
     credentials: true
 }));
