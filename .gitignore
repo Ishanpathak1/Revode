@@ -64,7 +64,7 @@ firebase-debug.*.log
 *.DS_Store
 
 # Build files
-build/
+
 out/
 
 # Service Workers
