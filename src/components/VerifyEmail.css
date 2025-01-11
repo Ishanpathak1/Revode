@@ -1,49 +1,49 @@
-/* src/components/VerifyEmail.css */
+/* VerifyEmail.css */
 .verify-email-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
     min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
     background-color: #f5f5f5;
-    padding: 1rem;
 }
 
 .verify-email-card {
     background: white;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 2.5rem;
     width: 100%;
-    max-width: 400px;
+    max-width: 440px;
+}
+
+.verify-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
 }
 
-.verify-status h2 {
+.verify-content h2 {
     color: #333;
+    font-size: 1.5rem;
     margin-bottom: 1rem;
 }
 
-.verify-status p {
+.verify-content p {
     color: #666;
-    margin-bottom: 1rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
 }
 
-.verify-status.success h2 {
-    color: #28a745;
-}
-
-.verify-status.error h2 {
-    color: #dc3545;
-}
-
-.loading-spinner {
+.spinner {
     border: 3px solid #f3f3f3;
-    border-top: 3px solid #3498db;
+    border-top: 3px solid #007bff;
     border-radius: 50%;
     width: 40px;
     height: 40px;
     animation: spin 1s linear infinite;
-    margin: 1rem auto;
+    margin-bottom: 1.5rem;
 }
 
 @keyframes spin {
@@ -51,17 +51,77 @@
     100% { transform: rotate(360deg); }
 }
 
-.primary-btn {
-    background-color: #007bff;
+.success-icon {
+    width: 56px;
+    height: 56px;
+    background-color: #28a745;
     color: white;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 1.5rem;
 }
 
-.primary-btn:hover {
+.error-icon {
+    width: 56px;
+    height: 56px;
+    background-color: #dc3545;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 1.5rem;
+}
+
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    max-width: 300px;
+}
+
+.primary-button, .secondary-button {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    width: 100%;
+}
+
+.primary-button {
+    background-color: #007bff;
+    color: white;
+}
+
+.primary-button:hover {
     background-color: #0056b3;
+}
+
+.secondary-button {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.secondary-button:hover {
+    background-color: #dee2e6;
+}
+
+.secondary-button:disabled {
+    background-color: #e9ecef;
+    color: #adb5bd;
+    cursor: not-allowed;
+}
+
+.redirect-text {
+    color: #6c757d;
+    font-size: 0.9rem;
+    font-style: italic;
 }
