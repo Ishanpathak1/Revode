@@ -1,6 +1,6 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar";
+import UserProfilePage from './components/UserProfilePage';
 import SignUp from "./components/Auth/Signup";
 import Login from "./components/Auth/Login";
 import Dashboard from "./components/Dashboard";
@@ -19,6 +19,7 @@ const App = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/streakpage" element={<StreakPage />} />
                 <Route path="/verify-email" element={<VerifyEmail />} /> 
+                <Route path="/profile/:userId" element={<UserProfilePage />} />
                 <Route
                     path="/dashboard"
                     element={

@@ -1,0 +1,66 @@
+.user-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #007bff;
+    cursor: pointer;
+    font-size: inherit;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  .user-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+  }
+  
+  /* Add to your existing ranking page CSS */
+  .ranking-table td {
+    vertical-align: middle;
+  }
+  
+  .ranking-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .ranking-content {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .ranking-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  
+  .ranking-table th,
+  .ranking-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .ranking-table th {
+    background-color: #f8f9fa;
+    color: #333;
+    font-weight: 600;
+  }
+  
+  .ranking-table tr:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .loading,
+  .error {
+    text-align: center;
+    padding: 2rem;
+}

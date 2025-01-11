@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { auth, db } from "../firebaseConfig";
 import { useRole } from '../hooks/useRole';
 import { ROLES, canAddProblems } from '../utils/roles';
-import { collection, addDoc, getDocs, query, where, updateDoc, doc, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, updateDoc, doc, getDoc, setDoc } from "firebase/firestore";
 import "./Dashboard.css";
 import Navbar from "./Navbar";
 
@@ -232,40 +232,44 @@ const Dashboard = () => {
     };
 
     const updateUserStats = async (score, passed, today) => {
-        const userStatsRef = collection(db, "userStats");
-        const q = query(userStatsRef, where("userId", "==", auth.currentUser.uid));
-        const querySnapshot = await getDocs(q);
-
-        if (querySnapshot.empty) {
-            const newUserStats = {
-                userId: auth.currentUser.uid,
-                email: auth.currentUser.email,
-                streak: passed ? 1 : 0,
-                lastSolved: passed ? today : null,
-                solvedProblem: passed ? 1 : 0,
-                totalScore: score,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            };
-            await addDoc(collection(db, "userStats"), newUserStats);
-            return;
-        }
-
-        if (passed) {
-            const userStatsDoc = querySnapshot.docs[0];
-            const userStats = userStatsDoc.data();
-            const newStreak = calculateNewStreak(userStats.lastSolved, today, userStats.streak);
-
-            await updateDoc(doc(db, "userStats", userStatsDoc.id), {
-                streak: newStreak,
-                lastSolved: today,
-                solvedProblem: (userStats.solvedProblem || 0) + 1,
-                totalScore: (userStats.totalScore || 0) + score,
-                updatedAt: new Date().toISOString()
-            });
+        try {
+            // Use the user's ID as the document ID
+            const userStatsDocRef = doc(db, "userStats", auth.currentUser.uid);
+            const userStatsDoc = await getDoc(userStatsDocRef);
+    
+            if (!userStatsDoc.exists()) {
+                // Create new stats using setDoc with user's ID
+                const newUserStats = {
+                    userId: auth.currentUser.uid,
+                    email: auth.currentUser.email,
+                    streak: passed ? 1 : 0,
+                    lastSolved: passed ? today : null,
+                    solvedProblem: passed ? 1 : 0,
+                    totalScore: score,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                await setDoc(userStatsDocRef, newUserStats);
+                return;
+            }
+    
+            if (passed) {
+                const userStats = userStatsDoc.data();
+                const newStreak = calculateNewStreak(userStats.lastSolved, today, userStats.streak);
+    
+                await updateDoc(userStatsDocRef, {
+                    streak: newStreak,
+                    lastSolved: today,
+                    solvedProblem: (userStats.solvedProblem || 0) + 1,
+                    totalScore: (userStats.totalScore || 0) + score,
+                    updatedAt: new Date().toISOString()
+                });
+            }
+        } catch (error) {
+            console.error("Error updating user stats:", error);
+            throw error;
         }
     };
-
     const calculateNewStreak = (lastSolved, today, currentStreak) => {
         if (!lastSolved) return 1;
 

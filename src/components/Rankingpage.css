@@ -1,13 +1,13 @@
 .ranking-container {
     max-width: 1200px;
-    margin: 2rem auto;
-    padding: 0 1rem;
+    margin: 0 auto;
+    padding: 2rem;
 }
 
 .ranking-content {
     background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     padding: 2rem;
 }
 
@@ -21,9 +21,9 @@
 }
 
 .ranking-header h1 {
-    font-size: 1.8rem;
-    font-weight: bold;
+    font-size: 2rem;
     color: #333;
+    margin: 0;
 }
 
 .ranking-controls {
@@ -32,34 +32,32 @@
     align-items: center;
 }
 
-.form-input {
-    padding: 0.5rem 1rem;
+.form-input,
+.form-select {
+    padding: 0.75rem 1rem;
     border: 1px solid #ddd;
-    border-radius: 4px;
+    border-radius: 0.5rem;
     font-size: 1rem;
-    min-width: 200px;
 }
 
-.form-select {
-    padding: 0.5rem 1rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 1rem;
-    background-color: white;
+.form-input:focus,
+.form-select:focus {
+    outline: none;
+    border-color: #007bff;
 }
 
 .user-ranking-card {
-    background: #f8f9fa;
-    border-radius: 8px;
+    background: linear-gradient(to right, #f8f9fa, #e9ecef);
+    border-radius: 0.75rem;
     padding: 1.5rem;
     margin-bottom: 2rem;
-    border: 1px solid #e9ecef;
+    border: 1px solid #dee2e6;
 }
 
 .user-ranking-card h2 {
-    font-size: 1.2rem;
     color: #495057;
-    margin-bottom: 1rem;
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
 }
 
 .user-ranking-stats {
@@ -71,7 +69,7 @@
 .rank-number {
     font-size: 2rem;
     font-weight: bold;
-    color: #2c3e50;
+    color: #007bff;
 }
 
 .rank-percentile {
@@ -86,11 +84,10 @@
 .rankings-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 1rem;
 }
 
 .rankings-table th {
-    background-color: #f8f9fa;
+    background: #f8f9fa;
     padding: 1rem;
     text-align: left;
     font-weight: 600;
@@ -104,7 +101,11 @@
 }
 
 .current-user-row {
-    background-color: #e8f4f8;
+    background: rgba(0, 123, 255, 0.05);
+}
+
+.current-user-row:hover {
+    background: rgba(0, 123, 255, 0.1);
 }
 
 .rank-badge {
@@ -112,21 +113,28 @@
     align-items: center;
     justify-content: center;
     min-width: 2rem;
-    font-weight: bold;
+    font-weight: 600;
+    color: #495057;
 }
 
-.loading-message {
+.user-badge {
+    background: #e9ecef;
+    color: #495057;
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    margin-left: 0.5rem;
+}
+
+.loading-message,
+.error-message {
     text-align: center;
     padding: 2rem;
     color: #6c757d;
 }
 
 .error-message {
-    background-color: #fee;
-    color: #c00;
-    padding: 1rem;
-    border-radius: 4px;
-    margin: 1rem 0;
+    color: #dc3545;
 }
 
 .welcome-container {
@@ -138,20 +146,20 @@
 
 .welcome-content {
     text-align: center;
-    padding: 2rem;
     background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 3rem;
+    border-radius: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .welcome-title {
-    font-size: 1.8rem;
+    font-size: 2rem;
     color: #333;
     margin-bottom: 1rem;
 }
 
 .welcome-text {
-    color: #666;
+    color: #6c757d;
     font-size: 1.1rem;
 }
 
@@ -169,10 +177,5 @@
     .form-select {
         width: 100%;
     }
-
-    .user-ranking-stats {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
 }
+

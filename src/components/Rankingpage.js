@@ -31,10 +31,29 @@ const RankingPage = () => {
             const q = query(userStatsRef, orderBy("totalScore", "desc"));
             const querySnapshot = await getDocs(q);
             
-            const rankingsData = querySnapshot.docs.map((doc, index) => ({
-                rank: index + 1,
-                ...doc.data()
-            }));
+            // Create a map to store the highest scoring entry for each email
+            const emailMap = new Map();
+            
+            querySnapshot.docs.forEach((doc) => {
+                const data = doc.data();
+                const currentEntry = emailMap.get(data.email);
+                
+                // If no entry exists for this email, or if this entry has a higher score
+                if (!currentEntry || (data.totalScore || 0) > (currentEntry.totalScore || 0)) {
+                    emailMap.set(data.email, {
+                        ...data,
+                        uniqueId: doc.id
+                    });
+                }
+            });
+
+            // Convert map to array and add ranks
+            const rankingsData = Array.from(emailMap.values())
+                .sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0))
+                .map((data, index) => ({
+                    ...data,
+                    rank: index + 1
+                }));
 
             // Find current user's rank
             if (user) {
@@ -45,6 +64,7 @@ const RankingPage = () => {
             setRankings(rankingsData);
             setError(null);
         } catch (error) {
+            console.error("Error in fetchRankings:", error);
             setError("Error fetching rankings: " + error.message);
         } finally {
             setLoading(false);
@@ -52,23 +72,16 @@ const RankingPage = () => {
     };
 
     const filterRankings = () => {
-        return rankings.filter(rank => 
-            rank.email.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    };
-
-    const handleLogout = async () => {
-        try {
-            await auth.signOut();
-        } catch (error) {
-            setError("Error logging out: " + error.message);
-        }
+        return rankings.filter(rank => {
+            const searchTerm = searchQuery.toLowerCase();
+            return rank.email?.toLowerCase().includes(searchTerm);
+        });
     };
 
     const getRankBadge = (rank) => {
         switch (rank) {
             case 1:
-                return "🏆";
+                return "🥇";
             case 2:
                 return "🥈";
             case 3:
@@ -80,7 +93,7 @@ const RankingPage = () => {
 
     return (
         <>
-            <Navbar user={user} onLogout={handleLogout} />
+            <Navbar user={user} onLogout={() => auth.signOut()} />
             <div className="ranking-container">
                 {user ? (
                     <div className="ranking-content">
@@ -89,7 +102,7 @@ const RankingPage = () => {
                             <div className="ranking-controls">
                                 <input
                                     type="text"
-                                    placeholder="Search by email..."
+                                    placeholder="Search users..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="form-input"
@@ -107,7 +120,6 @@ const RankingPage = () => {
                             </div>
                         </div>
 
-                        {/* User's Current Ranking Card */}
                         {userRank && (
                             <div className="user-ranking-card">
                                 <h2>Your Current Ranking</h2>
@@ -120,7 +132,6 @@ const RankingPage = () => {
                             </div>
                         )}
 
-                        {/* Rankings Table */}
                         <div className="rankings-table-container">
                             {loading ? (
                                 <div className="loading-message">Loading rankings...</div>
@@ -140,7 +151,7 @@ const RankingPage = () => {
                                     <tbody>
                                         {filterRankings().map((rankData) => (
                                             <tr 
-                                                key={rankData.userId}
+                                                key={rankData.uniqueId}
                                                 className={rankData.userId === user.uid ? 'current-user-row' : ''}
                                             >
                                                 <td>
@@ -148,7 +159,12 @@ const RankingPage = () => {
                                                         {getRankBadge(rankData.rank)}
                                                     </span>
                                                 </td>
-                                                <td>{rankData.email}</td>
+                                                <td>
+                                                    {rankData.email}{' '}
+                                                    {rankData.userId === user.uid && (
+                                                        <span className="user-badge">(You)</span>
+                                                    )}
+                                                </td>
                                                 <td>{rankData.solvedProblem || 0}</td>
                                                 <td>{rankData.streak || 0} days</td>
                                                 <td>{rankData.totalScore || 0}</td>
