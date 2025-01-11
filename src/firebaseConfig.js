@@ -39,12 +39,8 @@ const db = getFirestore(app);
 
 // Action code settings for email verification
 export const actionCodeSettings = {
-  // URL you want to redirect back to. The domain (www.example.com) for this
-  // URL must be whitelisted in the Firebase Console.
-  url: process.env.NODE_ENV === 'production' 
-    ? `${process.env.REACT_APP_PRODUCTION_URL}/verify-email`
-    : 'http://localhost:3000/verify-email',
-  handleCodeInApp: true,
+  url: `${window.location.origin}/verify-email`,  // This uses the current domain
+  handleCodeInApp: false,
 };
 
 // Export all services
