@@ -262,3 +262,13 @@
       padding: 2rem;
     }
   }
+
+  .verification-alert {
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    color: #856404;
+}
+
+.verification-alert svg {
+    color: #856404;
+}
