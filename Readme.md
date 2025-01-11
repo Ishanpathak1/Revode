@@ -134,4 +134,4 @@ src/
 ## Contact
 
 Your Name - [your-email@example.com](mailto:ishan.pathak2711@gmail.com)
-Project Link: [https://github.com/your-username/revode](https://revode.vercel.com)
+Project Link: [https://github.com/your-username/revode](https://revode.vercel.app)
