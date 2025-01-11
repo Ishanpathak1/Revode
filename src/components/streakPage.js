@@ -87,7 +87,6 @@ const StreakPage = () => {
                 />
                 <div className="profile-info">
                   <h1>{user.displayName || user.email}</h1>
-                  <p>Frontend Developer</p>
                 </div>
               </div>
             </div>
