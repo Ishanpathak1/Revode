@@ -1,41 +1,113 @@
 import React, { useState } from "react";
-import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, sendEmailVerification } from "firebase/auth";
 import { useNavigate, Link } from "react-router-dom";
-import { auth } from "../../firebaseConfig";
-import "./Login.css"; // Reuse the login styles
-import "./Signup.css"; // Additional signup-specific styles
+import { auth, actionCodeSettings } from "../../firebaseConfig";
+import "./Login.css";
+import "./Signup.css";
 
 const SignUp = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [verificationSent, setVerificationSent] = useState(false);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const provider = new GoogleAuthProvider();
 
     const handleSignUp = async (e) => {
         e.preventDefault();
         setError("");
+        setLoading(true);
+
         try {
+            // Password validation
+            if (password.length < 8) {
+                throw new Error("Password must be at least 8 characters long");
+            }
+            if (!/\d/.test(password)) {
+                throw new Error("Password must contain at least one number");
+            }
+            if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+                throw new Error("Password must contain at least one special character");
+            }
+
+            // Create user
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            console.log("User signed up:", userCredential.user);
-            navigate("/dashboard");
+            
+            // Send verification email
+            await sendEmailVerification(userCredential.user, actionCodeSettings);
+            
+            setVerificationSent(true);
+            console.log("Verification email sent to:", email);
+
         } catch (error) {
-            setError(error.message);
+            let errorMessage = "";
+            switch (error.code) {
+                case 'auth/email-already-in-use':
+                    errorMessage = "This email is already registered";
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage = "Please enter a valid email address";
+                    break;
+                case 'auth/weak-password':
+                    errorMessage = "Password is too weak";
+                    break;
+                default:
+                    errorMessage = error.message;
+            }
+            setError(errorMessage);
             console.error("Error signing up:", error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleGoogleSignUp = async () => {
         setError("");
+        setLoading(true);
         try {
             const result = await signInWithPopup(auth, provider);
-            console.log("User signed up with Google:", result.user);
-            navigate("/dashboard");
+            
+            if (result.user.emailVerified) {
+                navigate("/dashboard");
+            } else {
+                await sendEmailVerification(result.user, actionCodeSettings);
+                setVerificationSent(true);
+            }
         } catch (error) {
             setError(error.message);
             console.error("Error with Google sign-up:", error.message);
+        } finally {
+            setLoading(false);
         }
     };
+
+    if (verificationSent) {
+        return (
+            <div className="login-container">
+                <nav className="nav">
+                    <div className="nav-content">
+                        <div className="nav-brand">Revode</div>
+                    </div>
+                </nav>
+
+                <main className="main-content">
+                    <div className="verification-sent">
+                        <h2>Verify Your Email</h2>
+                        <p>A verification link has been sent to <strong>{email}</strong></p>
+                        <p>Please check your email and click the link to verify your account.</p>
+                        <p>After verification, you can proceed to login.</p>
+                        <button 
+                            onClick={() => navigate("/login")}
+                            className="submit-button"
+                        >
+                            Go to Login
+                        </button>
+                    </div>
+                </main>
+            </div>
+        );
+    }
 
     return (
         <div className="login-container">
@@ -85,6 +157,7 @@ const SignUp = () => {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
+                                    disabled={loading}
                                 />
                             </div>
 
@@ -98,6 +171,7 @@ const SignUp = () => {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
+                                    disabled={loading}
                                 />
                                 <div className="password-requirements">
                                     Password requirements:
@@ -109,8 +183,8 @@ const SignUp = () => {
                                 </div>
                             </div>
 
-                            <button type="submit" className="submit-button">
-                                Create Account
+                            <button type="submit" className="submit-button" disabled={loading}>
+                                {loading ? "Creating Account..." : "Create Account"}
                             </button>
                         </form>
 
@@ -118,8 +192,11 @@ const SignUp = () => {
                             <span className="divider-text">Or sign up with</span>
                         </div>
 
-                        <button onClick={handleGoogleSignUp} className="google-button">
-    
+                        <button 
+                            onClick={handleGoogleSignUp} 
+                            className="google-button"
+                            disabled={loading}
+                        >
                             Sign up with Google
                         </button>
 

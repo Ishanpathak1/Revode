@@ -54,3 +54,58 @@
 .already-account a:hover {
     text-decoration: underline;
 }
+
+/* Add these styles to your Signup.css file */
+
+.verification-sent {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    margin: 2rem auto;
+    text-align: center;
+}
+
+.verification-sent h2 {
+    color: #333;
+    margin-bottom: 1.5rem;
+}
+
+.verification-sent p {
+    color: #666;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.verification-sent strong {
+    color: #333;
+}
+
+.verification-sent button {
+    margin-top: 1.5rem;
+}
+
+/* Update existing styles */
+.submit-button:disabled,
+.google-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.error-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    background-color: #fee;
+    color: #c00;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+.error-message svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}

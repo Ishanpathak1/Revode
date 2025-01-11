@@ -33,8 +33,20 @@ try {
   console.error('Error initializing Firebase:', error.message);
 }
 
-// Initialize and export services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export { analytics };
+// Initialize auth and firestore
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Action code settings for email verification
+export const actionCodeSettings = {
+  // URL you want to redirect back to. The domain (www.example.com) for this
+  // URL must be whitelisted in the Firebase Console.
+  url: process.env.NODE_ENV === 'production' 
+    ? `${process.env.REACT_APP_PRODUCTION_URL}/verify-email`
+    : 'http://localhost:3000/verify-email',
+  handleCodeInApp: true,
+};
+
+// Export all services
+export { auth, db, analytics };
 export default app;

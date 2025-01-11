@@ -8,7 +8,7 @@ import PrivateRoute from "./components/Auth/PrivateRoute";
 import StreakPage from "./components/streakPage";
 import Home from "./Home";
 import RankingPage from "./components/Rankingpage";
-
+import VerifyEmail from "./components/VerifyEmail";
 const App = () => {
     return (
         <div>
@@ -18,6 +18,7 @@ const App = () => {
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/streakpage" element={<StreakPage />} />
+                <Route path="/verify-email" element={<VerifyEmail />} /> 
                 <Route
                     path="/dashboard"
                     element={
