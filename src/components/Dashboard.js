@@ -5,6 +5,8 @@ import { ROLES, canAddProblems } from '../utils/roles';
 import { collection, addDoc, getDocs, query, where, updateDoc, doc, getDoc, setDoc } from "firebase/firestore";
 import "./Dashboard.css";
 import Navbar from "./Navbar";
+import { deleteDoc } from 'firebase/firestore';
+
 
 const Dashboard = () => {
     const [user, setUser] = useState(null);
@@ -62,6 +64,11 @@ const Dashboard = () => {
         return () => unsubscribe();
     }, []);
 
+    const handleEditProblem = async (problemId) => {
+        // Implement your edit logic here
+        console.log("Edit problem:", problemId);
+    };
+
     const fetchProblems = async () => {
         try {
             const problemsRef = collection(db, "problems");
@@ -112,26 +119,39 @@ const Dashboard = () => {
     };
 
     const handleDeleteProblem = async (problemId) => {
-        if (!userCanAddProblems) return;
-        
-        try {
-            await deleteDoc(doc(db, "problems", problemId));
-            
-            const quizQuery = query(
-                collection(db, "quizzes"), 
-                where("problemId", "==", problemId)
-            );
-            const quizSnapshot = await getDocs(quizQuery);
-            quizSnapshot.docs.forEach(async (doc) => {
-                await deleteDoc(doc.ref);
-            });
-            
-            await fetchProblems();
-            setError(null);
-        } catch (error) {
-            setError("Error deleting problem: " + error.message);
+    if (!userCanAddProblems) return;
+    
+    try {
+        // First verify the user is still authenticated
+        if (!auth.currentUser) {
+            throw new Error("User not authenticated");
         }
-    };
+
+        setLoading(true); // Add loading state
+        
+        // Delete the problem document
+        const problemRef = doc(db, "problems", problemId);
+        await deleteDoc(problemRef);
+        
+        // Delete associated quizzes
+        const quizQuery = query(
+            collection(db, "quizzes"), 
+            where("problemId", "==", problemId)
+        );
+        
+        const quizSnapshot = await getDocs(quizQuery);
+        const deletePromises = quizSnapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+        
+        await fetchProblems();
+        setError(null);
+    } catch (error) {
+        console.error("Delete error:", error);
+        setError(`Error deleting problem: ${error.message}`);
+    } finally {
+        setLoading(false);
+    }
+};
 
     const startQuiz = async (problemId) => {
         try {
@@ -356,29 +376,67 @@ const Dashboard = () => {
     };
 
     const handleAddProblem = async () => {
+        // Initial logging for user and role verificatio
+    
         if (!userCanAddProblems) {
+            
             setError("You don't have permission to add problems");
             return;
         }
-
+    
         try {
             if (!newProblem.title || !newProblem.description || !newProblem.link) {
                 setError("Please fill in all fields");
                 return;
             }
-
+    
             setLoading(true);
             
+            // Verify role document
+            const roleDoc = await getDoc(doc(db, "roles", auth.currentUser.uid));
+            
+            
+            // Check role value and type
+            const roleData = roleDoc.data();
+            
+            
+            if (!roleDoc.exists()) {
+                // Create role document if it doesn't exist
+                try {
+                    await setDoc(doc(db, "roles", auth.currentUser.uid), {
+                        role: "admin",
+                        email: auth.currentUser.email,
+                        userId: auth.currentUser.uid,
+                        createdAt: new Date().toISOString()
+                    });
+                    
+                } catch (error) {
+                    throw new Error(`Failed to create role document: ${error.message}`);
+                }
+            }
+            
+            // Create the problem document
             const problemData = {
-                ...newProblem,
+                title: newProblem.title.trim(),
+                description: newProblem.description.trim(),
+                difficulty: newProblem.difficulty,
+                link: newProblem.link.trim(),
                 createdBy: auth.currentUser.uid,
                 isPublic: true,
                 createdAt: new Date().toISOString(),
             };
             
+            
+            
+            // Add the problem
             const problemRef = await addDoc(collection(db, "problems"), problemData);
+            
+    
+            // Generate and add MCQs
+            
             const mcqs = await generateMCQs(newProblem.description);
             
+    
             const quizData = {
                 problemId: problemRef.id,
                 createdBy: auth.currentUser.uid,
@@ -386,8 +444,11 @@ const Dashboard = () => {
                 createdAt: new Date().toISOString(),
             };
             
+            
             await addDoc(collection(db, "quizzes"), quizData);
             
+    
+            // Reset form
             setNewProblem({
                 title: "",
                 description: "",
@@ -397,7 +458,11 @@ const Dashboard = () => {
             
             await fetchProblems();
             setError(null);
+            
+            // Show success message
+            
         } catch (error) {
+            console.error("Full error object:", error);
             setError("Error adding problem: " + error.message);
         } finally {
             setLoading(false);
