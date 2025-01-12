@@ -26,7 +26,6 @@ export const useRole = (user) => {
                     setRole('student'); // Default role
                 }
             } catch (error) {
-                console.error('Error fetching role:', error);
                 setRole('student');
             } finally {
                 setLoading(false);

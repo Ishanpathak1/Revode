@@ -50,7 +50,6 @@ try {
   // Provide fallback or error handling for critical services
   if (!auth || !db || !storage) {
     console.error('Critical Firebase services failed to initialize');
-    // You might want to show an error UI to the user here
   }
 }
 
@@ -58,7 +57,7 @@ try {
 export const actionCodeSettings = {
   url: `${window.location.origin}/verify-email`,
   handleCodeInApp: false,
-  dynamicLinkDomain: process.env.REACT_APP_DYNAMIC_LINK_DOMAIN // Optional: for dynamic links
+  dynamicLinkDomain: process.env.REACT_APP_DYNAMIC_LINK_DOMAIN
 };
 
 // Utility function to check if all critical services are available
@@ -68,7 +67,7 @@ export const isFirebaseReady = () => {
 
 // Helper function for file uploads
 export const getStorageFilePath = (userId, fileType, fileName) => {
-  const validFileTypes = ['resumes', 'profileImages', 'documents'];
+  const validFileTypes = ['resumes', 'profileImages', 'documents', 'blogImages'];
   if (!validFileTypes.includes(fileType)) {
     throw new Error('Invalid file type');
   }
@@ -79,23 +78,31 @@ export const getStorageFilePath = (userId, fileType, fileName) => {
 export const uploadLimits = {
   resume: 5 * 1024 * 1024, // 5MB
   profileImage: 2 * 1024 * 1024, // 2MB
-  document: 10 * 1024 * 1024 // 10MB
+  document: 10 * 1024 * 1024, // 10MB
+  blogImage: 5 * 1024 * 1024 // 5MB
 };
 
 // Allowed file types
 export const allowedFileTypes = {
   resume: ['application/pdf'],
   profileImage: ['image/jpeg', 'image/png', 'image/gif'],
-  document: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+  document: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+  blogImage: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 };
 
-// Export all services and utilities
-export {
-  app as default,
-  auth,
-  db,
-  storage,
-  analytics
+// Blog post categories
+export const BLOG_CATEGORIES = {
+  TUTORIAL: 'Tutorial',
+  NEWS: 'News',
+  GUIDE: 'Guide',
+  INTERVIEW_EXPERIENCE: 'Interview Experience'
+};
+
+// Blog post status
+export const POST_STATUS = {
+  DRAFT: 'draft',
+  PUBLISHED: 'published',
+  ARCHIVED: 'archived'
 };
 
 // Constants for collection names
@@ -107,5 +114,27 @@ export const COLLECTIONS = {
   PROBLEMS: 'problems',
   QUIZZES: 'quizzes',
   COMPLETED_QUIZZES: 'completedQuizzes',
-  ROLES: 'roles'
+  ROLES: 'roles',
+  // Blog related collections
+  BLOG_POSTS: 'blog_posts',
+  BLOG_COMMENTS: 'blog_comments',
+  USER_LIKES: 'user_likes',
+  BLOG_TAGS: 'blog_tags'
+};
+
+// Blog permissions
+export const BLOG_PERMISSIONS = {
+  CREATE_POST: 'createPost',
+  EDIT_POST: 'editPost',
+  DELETE_POST: 'deletePost',
+  MANAGE_COMMENTS: 'manageComments'
+};
+
+// Export all services and utilities
+export {
+  app as default,
+  auth,
+  db,
+  storage,
+  analytics
 };

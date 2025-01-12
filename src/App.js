@@ -9,17 +9,22 @@ import StreakPage from "./components/streakPage";
 import Home from "./Home";
 import RankingPage from "./components/Rankingpage";
 import VerifyEmail from "./components/VerifyEmail";
+import Blog from "./components/Blog";
+import BlogDetail from "./components/BlogDetail";
 const App = () => {
     return (
         <div>
             <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:postId" element={<BlogDetail />} />
+                <Route path="/blog" element={<Blog />} />
                 <Route path="/rank" element={<RankingPage />} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/streakpage" element={<StreakPage />} />
                 <Route path="/verify-email" element={<VerifyEmail />} /> 
-                <Route path="/profile/:userId" element={<UserProfilePage />} />
+                <Route path="/users/:userId" element={<UserProfilePage />} />
                 <Route
                     path="/dashboard"
                     element={

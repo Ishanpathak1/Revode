@@ -30,6 +30,9 @@ const Navbar = ({ user, onLogout }) => {
                     <Link to="/streakPage" className={isActive("/streak")}>
                         Profile
                     </Link>
+                    <Link to="/blog" className={isActive("/blog")}>
+                        Blog
+                    </Link>
                     <Link to="/rank" className={isActive("/rank")}>
                         Rank
                     </Link>
