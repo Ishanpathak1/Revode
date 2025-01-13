@@ -24,6 +24,14 @@
         "dest": "/build/static/$1"
       },
       {
+        "src": "/sitemap.xml",
+        "dest": "/build/sitemap.xml"
+      },
+      {
+        "src": "/robots.txt",
+        "dest": "/build/robots.txt"
+      },
+      {
         "src": "/[^.]+",
         "dest": "index.html"
       },
@@ -32,4 +40,4 @@
         "dest": "/build/$1"
       }
     ]
-  }
+}
