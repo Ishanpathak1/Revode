@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import StreakPage from "./streakPage";
-import RankingPage from "./Rankingpage";
 import "./Navbar.css";
 
 const Navbar = ({ user, onLogout }) => {
