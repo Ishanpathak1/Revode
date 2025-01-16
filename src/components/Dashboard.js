@@ -6,6 +6,7 @@ import { collection, addDoc, getDocs, query, where, updateDoc, doc, getDoc, setD
 import "./Dashboard.css";
 import Navbar from "./Navbar";
 import { deleteDoc } from 'firebase/firestore';
+import DynamicMeta from "./DynamicMeta";
 
 
 const Dashboard = () => {
@@ -470,6 +471,7 @@ const Dashboard = () => {
     };
 
     return (
+        <><DynamicMeta/>
         <div className="dashboard-container">
             <Navbar user={user} onLogout={handleLogout} />
             
@@ -748,6 +750,7 @@ const Dashboard = () => {
                 </div>
             )}
         </div>
+        </>
     );
 };
 

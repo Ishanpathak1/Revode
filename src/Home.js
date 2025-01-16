@@ -2,9 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import './Home.css';
 import TypingEffect from './components/TypingEffect';
+import DynamicMeta from './components/DynamicMeta';
 
 const Home = () => {
     return (
+        <><DynamicMeta/>
         <div className="home">
             {/* Navigation */}
             <nav className="nav">
@@ -118,6 +120,7 @@ const Home = () => {
                 </div>
             </footer>
         </div>
+        </>
     );
 };
 

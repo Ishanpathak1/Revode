@@ -12,6 +12,8 @@ import RankingPage from "./components/Rankingpage";
 import VerifyEmail from "./components/VerifyEmail";
 import Blog from "./components/Blog";
 import BlogDetail from "./components/BlogDetail";
+import SEOSchema from './components/SeoSchema';
+import PerformanceOptimizer from "./components/PerfomanceOptimizer";
 
 const MIXPANEL_TOKEN = process.env.REACT_APP_MIXPANEL_TOKEN;
 
@@ -64,6 +66,8 @@ const App = () => {
 
     return (
         <div>
+            <SEOSchema />
+            <PerformanceOptimizer />
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/blog" element={<Blog />} />

@@ -3,6 +3,7 @@ import { auth, db } from "../firebaseConfig";
 import { collection, query, orderBy, getDocs } from "firebase/firestore";
 import Navbar from "./Navbar";
 import "./Rankingpage.css";
+import DynamicMeta from "./DynamicMeta";
 
 const RankingPage = () => {
     const [user, setUser] = useState(null);
@@ -93,6 +94,7 @@ const RankingPage = () => {
 
     return (
         <>
+        <DynamicMeta/>
             <Navbar user={user} onLogout={() => auth.signOut()} />
             <div className="ranking-container">
                 {user ? (

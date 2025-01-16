@@ -4,6 +4,7 @@ import { auth, db } from "../firebaseConfig";
 import { useRole } from '../hooks/useRole';
 import { signOut } from "firebase/auth";
 import Navbar from './Navbar';
+import DynamicMeta from './DynamicMeta';
 import "./Blog.css";
 import { 
     collection, 
@@ -195,6 +196,7 @@ const Blog = () => {
     };
 
     return (
+        <> <DynamicMeta/>
         <div className="min-h-screen">
             
             {/* Header */}
@@ -450,6 +452,7 @@ const Blog = () => {
                 )}
             </main>
         </div>
+        </>
     );
 };
 

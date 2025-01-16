@@ -8,6 +8,7 @@ import "react-calendar-heatmap/dist/styles.css";
 import { Tooltip } from "react-tooltip";
 import "./streakPage.css";
 import Navbar from "./Navbar";
+import DynamicMeta from "./DynamicMeta";
 
 const StreakPage = () => {
   const [user, setUser] = useState(null);
@@ -158,6 +159,7 @@ const StreakPage = () => {
 
   return (
     <>
+    <DynamicMeta/>
       <Navbar user={user} onLogout={handleLogout} />
       <div className="streak-container">
         {isLoading ? (

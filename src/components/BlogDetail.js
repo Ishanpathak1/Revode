@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import './BlogDetail.css';
+import DynamicMeta from './DynamicMeta';
 
 const BlogDetail = () => {
     const { postId } = useParams();
@@ -87,6 +88,7 @@ const BlogDetail = () => {
 
     return (
         <>
+        <DynamicMeta/>
         <nav className="navbar">
                     <div className="nav-container">
                         <a href="/blog" className="nav-logo">Revode</a>
